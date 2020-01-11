@@ -1,0 +1,179 @@
+---
+title: "Text Analysis on NTU course"
+author: "分解茶"
+date: "12/26/2019"
+output: 
+  html_document:
+    number_sections: yes
+    highlight: tango
+    toc: yes
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = F)
+
+```
+
+資料前處理
+=========================
+
+```{r}
+library(tidyverse)
+library(jiebaR)
+library(quanteda)
+
+## 讀入文字
+#course_data <- read_csv("selected_course_data_108-1.csv")
+course_data <- read_csv("partial_100_course_data.csv")
+#course_data <- read_csv("partial_1000_course_data.csv")
+course_content <- course_data[["課程大綱"]]
+head(course_content, 2)
+
+## 斷詞
+word <- rep("", length(course_content))
+seg <- worker()
+
+for (i in seq_along(word)) {
+  segged <- segment(course_content[i], seg)
+  word[i] <- paste0(segged, collapse = " ")
+}
+head(word, 2)
+
+## 弄成tibble
+df_course <- tibble::tibble(
+  course_id = seq_along(word),
+  content = word
+)
+head(df_course, 2)
+
+## 弄成corpus
+quanteda_corpus <- corpus(df_course,
+                          docid_field = "course_id",
+                          text_field = "content")
+qcorp_tokens2 <- tokens(quanteda_corpus, "fastestword")
+
+## 弄成dfm
+dfm_course <- dfm(qcorp_tokens2)
+
+## 刪掉stopwords
+features_to_remove <- readLines("features_to_remove0102.txt")
+dfm_course <- dfm_remove(dfm_course, stopwords(language = "en"))
+dfm_course <- dfm_remove(dfm_course, c("的","課程","與","第","週","之","課程名稱","document",1:99))
+dfm_course <- dfm_remove(dfm_course, features_to_remove)
+
+dim(dfm_course)
+
+## 弄成co occurrence matrix
+fcm_course <- fcm(dfm_course, tri=F)  #新增tri=F, 下三角不為0, 計算方便
+head(fcm_course, 2)
+dim(fcm_course)
+
+#選前20個
+feat <- names(topfeatures(fcm_course, 50))
+fcm_course_20 <- fcm_select(fcm_course, pattern = feat)
+dim(fcm_course_20)
+
+## 取得前幾高的關鍵字，以檢視是否刪除
+#txt <- names(topfeatures(fcm_course, 500))
+#writeLines(txt, "top500features_1231_partial.txt")
+
+## 看看圖比較開心
+size <- log(colSums(dfm_select(dfm_course, feat)))
+set.seed(144)
+textplot_network(fcm_course_20, min_freq = 0.8, vertex_size = size / max(size) * 3)
+
+```
+
+資料中處理
+=========================
+
+```{r}
+fcm_course_tibble <- convert(fcm_course, to = "matrix") %>% # 轉換型別
+    as_tibble() %>% # 變成 tibble
+    add_column(feat_names = names(.), .before = T)
+#write_csv(fcm_course_tibble, path="fcm_course_tibble_1000_0104.csv")
+
+tags <- function (fcm, keyword, occurrence = 2){
+  frame <- fcm %>% select(feat_names, keyword)
+  
+  for ( i in names(frame)[2:length(frame)]){
+    result_tags <- frame %>% 
+      filter(.[[i]] >= occurrence) %>% # 找出大於等於 occurrence 的數值
+      arrange(desc(.[[i]])) %>%
+      .$feat_names
+    
+    if (length(result_tags) < 10 && length(result_tags) > 0){
+      return(result_tags[1:length(result_tags)])
+    } else if (length(result_tags) > 10){
+      return(result_tags[1:10])
+    } else if (length(result_tags) == 10){
+      return("None")
+    }
+    
+  }
+  
+}
+```
+
+
+```{r}
+#測試用
+tags(fcm_course_tibble, "動物", occurrence = 10) #印出結果
+```
+
+```{r}
+dfm_course_tibble <- convert(dfm_course, to = "data.frame") %>% 
+    as_tibble()
+#write_csv(dfm_course_tibble, path="dfm_course_tibble_1000_0104.csv")
+
+filter_class <- function (original_data, keywords, tags){
+  #建立回傳值的空vector
+  ans <- vector()
+  
+  #轉換資料形態
+  
+  for (i in seq_along(tags)) {
+    #製造欄位名稱
+    score_name <- paste("score_", i)
+    #創造代數不然下下行有時候會有問題 ## 這個還是有問題
+    strange <- original_data[[keywords]] * 0.5 + original_data[[tags[i]]] * 0.5
+    #測試是不是這邊出錯
+    #print(strange)
+    
+    #創造加權平均的分數欄位
+    new_data <- mutate(original_data, score_name = strange) %>% 
+      #重新排序由大到小
+      arrange(desc(score_name)) %>% 
+      head(5) %>%
+      filter(score_name > 0) %>%
+      .$document
+
+    ans <- c(ans, new_data)
+  }
+  return(unique(ans))
+}
+```
+
+```{r}
+#測試用
+filter_class(dfm_course_tibble, "動物", "經營")
+filter_class(dfm_course_tibble, "動物", c("畜牧","經營"))
+```
+
+功能區
+=========================
+
+```{r}
+#給定一個keyword
+keyword <- "動物"
+
+tags <- tags(fcm_course_tibble, keyword = keyword, occurrence = 10)
+filter_class_no <- filter_class(dfm_course_tibble, keyword = keyword, tags = tags)
+
+#測試用
+#filter_class_no <- c("69", "19") #放入filter_class回傳的東西
+course_data[filter_class_no, ] #印出最終結果
+```
+
