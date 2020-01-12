@@ -22,7 +22,7 @@ G11 分解茶
     - 針對「課程大綱」這一欄，利用 JiebaR 套件斷詞
     - 利用 Quanteda 套件建立 Document-Feature Matrix，轉化為 tibble 後儲存為 dfm_course_tibble_100_0104
     - 根據 features_to_remove0102.txt 去除 Stop words
-    - 建立Co-Occurence Matrix，轉化為 tibble 後儲存為 fcm_course_tibble_100_0104
+    - 建立 Co-Occurence Matrix，轉化為 tibble 後儲存為 fcm_course_tibble_100_0104
     - 建立關鍵字輸入的自訂函數並測試，以用在 shinyApp 中
 
 ## 網頁呈現（shinyApp）
@@ -31,4 +31,5 @@ G11 分解茶
     - 輸入一關鍵字後，會回傳與關鍵字語意網路最為相關的課程結果
     - 結果可由頁面上之 Like 或是 Dislike 來選擇是否加入台大課程網選課名單，或是跳過繼續尋找下一門課程
 
-
+- [ ] www/board.jpg
+    - 網頁背景圖片
