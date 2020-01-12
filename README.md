@@ -12,7 +12,7 @@ G11 分解茶
 - [ ] crawler.py
     - 利用 Python 中的正則表達式 (re 套件)，夾取所需資訊。欄位包含「課程名稱」、「開課學期」、「授課對象」、「授課教師」、「課號」、「課程識別碼」、「班次」、「學分」、「全年/半年」、「必修/選修」、「上課時間」、「上課地點」、「備註」、「ceiba課程網站」、「課程大綱」（syllabus）、「課程大綱網址」，共 16 項。
     - 將資料儲存成 JSON 檔，命名為：original_course_data_108-1.json。
-    - 註：crawler.py 為上述所提紅樓夢專案中的爬蟲檔案，因已有現成程式碼故不另重寫。檔案在 github 上開源（連結），已取得原作者同意再利用。
+    - 註：crawler.py 為上述所提紅樓夢專案中的[爬蟲檔案](https://github.com/coding-coworking-club/dream-of-the-red-chamber)，因已有現成程式碼故不另重寫。檔案在 github 上開源，已取得原作者同意再利用。
 
 ## 資料前處理及自訂函數測試
 - [ ] select_course.R
