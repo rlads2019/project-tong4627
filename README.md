@@ -16,8 +16,11 @@ G11 分解茶
 
 ## 資料前處理及自訂函數測試
 - [ ] select_course.R
-    - 選取流水號、課名、授課教師以及課程大綱這四欄作為主要資料處理對象
-    - 針對「課程大綱」這一欄，利用 JiebaR 套件斷詞。再利用 Quanteda 套件去除 Stop words 後建立Co-Occurence Matrix。
+    - 選取流水號、課名、授課教師以及課程大綱這四欄作為主要資料處理對象，隨機篩選 100 筆課程，將課程列表儲存為 partial_100_course_data.csv
+    - 針對「課程大綱」這一欄，利用 JiebaR 套件斷詞
+    - 利用 Quanteda 套件建立 Document-Feature Matrix，轉化為 tibble 後儲存為 dfm_course_tibble_100_0104
+    - 根據 features_to_remove0102.txt 去除 Stop words
+    - 建立Co-Occurence Matrix，轉化為 tibble 後儲存為 fcm_course_tibble_100_0104
     
 - [ ] 0104mark.rmd
     - 整理資料形式、新增欄位
